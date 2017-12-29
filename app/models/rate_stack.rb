@@ -1,0 +1,2 @@
+class RateStack < ApplicationRecord
+end

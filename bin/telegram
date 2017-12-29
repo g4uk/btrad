@@ -1,0 +1,32 @@
+#!/usr/bin/env ruby
+
+ENV['RAILS_ENV'] ||= 'development'
+
+require 'rubygems'
+require 'bundler/setup'
+require 'telegram/bot'
+require File.dirname(__FILE__) + '/../config/environment'
+
+token = '473335262:AAGI5rNZHxzM2GijmI6rtCVJu0ZE0vKYi-8'
+
+Telegram::Bot::Client.run(token) do |bot|
+  bot.listen do |message|
+    case message.text
+    when '/start'
+      bot.api.send_message(chat_id: message.chat.id, text: "Hello, #{message.from.first_name}")
+    when '/stop'
+      bot.api.send_message(chat_id: message.chat.id, text: "Bye, #{message.from.first_name}")
+    when '/start fhntv1lfgh0vtntq'
+      TradingState.where('name = ?', 'trating_enabled').update_all(value: true)
+      TradingState.where('name = ?', 'telegram_chat_id').update_all(value: message.chat.id)
+      bot.api.send_message(chat_id: message.chat.id, text: "Hello, #{message.from.first_name}, btrad was launched!")
+    when '/stop fhntv1lfgh0vtntq'
+      TradingState.where('name = ?', 'trating_enabled').update_all(value: false)
+      TradingState.where('name = ?', 'telegram_chat_id').update_all(value: nil)
+      bot.api.send_message(chat_id: message.chat.id, text: "#{message.from.first_name}, btrad was stopped!")
+    when '/reboot_operation_rate fhntv1lfgh0vtntq'
+      TradingState.where('name = ?', 'operation_rate').update_all(value: 0.0)
+      bot.api.send_message(chat_id: message.chat.id, text: "#{message.from.first_name}, operation_rate was reset!")
+    end
+  end
+end
