@@ -111,6 +111,9 @@ module Trading
 
           say_telegram("Продаж #{@balance_pair[@currency]} #{@currency} по #{newest_rate.rate.to_f}. Профіт: #{planning_earnings * count} #{@currency}")
           if order['status'] && order['order_id']
+            _amount = newest_rate.rate.to_f * count
+            _operation_rate = (_amount * 1.001)/count
+
             Order.create(
               order_id: order['order_id'],
               order_type: trading_type,
@@ -118,12 +121,12 @@ module Trading
               count: count,
               base_currency: @base_currency,
               currency: @currency,
-              amount: newest_rate.rate.to_f * count,
+              amount: _amount,
               rate: newest_rate.rate.to_f
             )
-            TradingState.where('name = ?', 'operation_rate').update_all(value: newest_rate.rate.to_f)
-
-            say_telegram("Створено угоду №#{order['order_id']}")
+            TradingState.where('name = ?', 'operation_rate').update_all(value: _operation_rate.to_f)
+ß
+            say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції (-1%): #{_operation_rate}")
           else
             say_telegram("Не вдалось створити угоду: #{order}")
           end
@@ -146,6 +149,10 @@ module Trading
 
           say_telegram("Покупка #{@balance_pair[@currency]} #{@currency} по #{newest_rate.rate.to_f}. Профіт: #{planning_earnings * count} #{@base_currency}")
           if order['status'] && order['order_id']
+
+            _amount = newest_rate.rate.to_f * count
+            _operation_rate = (_amount * 1.001)/count
+
             Order.create(
                 order_id: order['order_id'],
                 order_type: trading_type,
@@ -153,12 +160,12 @@ module Trading
                 count: count,
                 base_currency: @base_currency,
                 currency: @currency,
-                amount: newest_rate.rate.to_f * count,
+                amount: _amount,
                 rate: newest_rate.rate.to_f
             )
-            TradingState.where('name = ?', 'operation_rate').update_all(value: newest_rate.rate.to_f)
+            TradingState.where('name = ?', 'operation_rate').update_all(value: _operation_rate.to_f)
 
-            say_telegram("Створено угоду №#{order['order_id']}")
+            say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції (-1%): #{_operation_rate}")
           else
             say_telegram("Не вдалось створити угоду: #{order}")
           end
