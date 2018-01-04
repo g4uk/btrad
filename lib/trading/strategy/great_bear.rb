@@ -112,7 +112,7 @@ module Trading
           say_telegram("Продаж #{@balance_pair[@currency]} #{@currency} по #{newest_rate.rate.to_f}. Профіт: #{planning_earnings * count} #{@currency}")
           if order['status'] && order['order_id']
             _amount = newest_rate.rate.to_f * count
-            _operation_rate = (_amount * 1.001)/count
+            _operation_rate = ((planning_earnings * count)*0.1)/count + newest_rate.rate.to_f
 
             Order.create(
               order_id: order['order_id'],
@@ -151,7 +151,8 @@ module Trading
           if order['status'] && order['order_id']
 
             _amount = newest_rate.rate.to_f * count
-            _operation_rate = (_amount * 1.001)/count
+            _operation_rate = ((planning_earnings * count)*0.1)/count + newest_rate.rate.to_f
+
 
             Order.create(
                 order_id: order['order_id'],
