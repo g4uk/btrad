@@ -104,9 +104,10 @@ module Trading
       if trading_type == 'sell'
         planning_earnings = newest_rate.rate.to_f - trading_states['operation_rate'].to_f
         if newest_rate.change_type == 'up' && planning_earnings > avg_short_rate_diff
-          count = @balance_pair[@currency].to_f
+          count = @balance_pair[@currency].to_i
 
           order = exchange_driver.sell(count, newest_rate.rate.to_f, @currency, @base_currency)
+          say_telegram("#{order}")
 
           say_telegram("Продаж #{@balance_pair[@currency]} #{@currency} по #{newest_rate.rate.to_f}. Профіт: #{planning_earnings * count} #{@currency}")
           if order['status'] && order['order_id']
@@ -138,9 +139,10 @@ module Trading
       else
         planning_earnings = trading_states['operation_rate'].to_f - newest_rate.rate.to_f
         if newest_rate.change_type == 'down' && planning_earnings > avg_short_rate_diff
-          count = @balance_pair[@base_currency].to_f * newest_rate.rate.to_f
+          count = (@balance_pair[@base_currency].to_f * newest_rate.rate.to_f).to_i
 
           order = exchange_driver.buy(count, newest_rate.rate.to_f, @currency, @base_currency)
+          say_telegram("#{order}")
 
           say_telegram("Покупка #{@balance_pair[@currency]} #{@currency} по #{newest_rate.rate.to_f}. Профіт: #{planning_earnings * count} #{@base_currency}")
           if order['status'] && order['order_id']
