@@ -203,7 +203,7 @@ module Trading
             say_telegram("Не вдалось створити угоду: #{order}")
           end
         else
-          TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: _threshold_iteration_count.to_i += 1)
+          TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: _threshold_iteration_count += 1)
 
           _msg = []
           _msg << "валюта виросла в ціні" if newest_rate.change_type == 'up'
