@@ -33,3 +33,12 @@ end
 unless TradingState.where('name = ?', 'base_currency_trade_limit').exists?
   TradingState.create(name: 'base_currency_trade_limit', value: 10)
 end
+
+unless TradingState.where('name = ?', 'threshold').exists?
+  TradingState.create(name: 'threshold', value: 0)
+end
+
+unless TradingState.where('name = ?', 'threshold_iteration_count').exists?
+  TradingState.create(name: 'threshold_iteration_count', value: 0)
+end
+

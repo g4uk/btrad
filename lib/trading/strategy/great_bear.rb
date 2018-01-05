@@ -3,6 +3,16 @@ require 'telegram/bot'
 module Trading
   class Strategy::GreatBear
 
+    TRAND_BY_TRADING_TYPE = {
+      'sell' => 'up',
+      'buy' => 'down'
+    }
+
+    MAGIC = {
+      'sell' => 'buy',
+      'buy' => 'sell'
+    }
+
     def initialize(currency_pair)
       @currency_pair = currency_pair.to_s
       @balance_pair = Hash[@currency_pair.split('_').map(&:upcase).zip [0, 0]]
@@ -92,27 +102,41 @@ module Trading
       short_stack = long_stack.first(trading_states['max_analyze_iteration'].to_i)
       newest_rate = short_stack.first.dup
 
+      trand_stack = long_stack.select{|ls| ls.change_type != 'none' }.first(trading_states['max_analyze_iteration'].to_i * 2).map{|m| m.change_type}.group_by{|x| x}
+
       # >>>>>>>>>>>>>>>>>
 
       if trading_states['operation_rate'].to_f == 0.0
         TradingState.where('name = ?', 'operation_rate').update_all(value: newest_rate.rate.to_f)
       end
 
-      cons = short_stack.map{|s| s.rate }.each_cons(2).collect { |a, b| b - a }
-      avg_short_rate_diff = cons.reduce(:+).to_f / cons.size
+      #cons = short_stack.map{|s| s.rate }.each_cons(2).collect { |a, b| b - a }
+      #avg_short_rate_diff = cons.reduce(:+).to_f / cons.size
+      avg_short_rate_diff = 0
+
+      _threshold = TradingState.where('name = ?', 'threshold').first.value.to_f
+      _threshold_iteration_count = TradingState.where('name = ?', 'threshold_iteration_count').first.value.to_i
+
+      _threshold_operation = _threshold <= 0.0 || _threshold_iteration_count < trading_states['max_analyze_iteration'].to_i ? false : check_trand(trading_type, trand_stack) && _threshold <= newest_rate.rate.to_f
 
       if trading_type == 'sell'
         planning_earnings = newest_rate.rate.to_f - trading_states['operation_rate'].to_f
-        if newest_rate.change_type == 'up' && planning_earnings > avg_short_rate_diff
+        if (newest_rate.change_type == TRAND_BY_TRADING_TYPE[trading_type] && planning_earnings > avg_short_rate_diff) || _threshold_operation
           count = @balance_pair[@currency].to_i
+
+          if _threshold_operation
+            say_telegram("!!! Стоп-поріг: #{_threshold}, Курс: #{newest_rate.rate}. Втрати: -#{planning_earnings * count}")
+          end
 
           order = exchange_driver.sell(count, newest_rate.rate.to_f, @currency, @base_currency)
           say_telegram("#{order}")
 
           say_telegram("Продаж #{@balance_pair[@currency]} #{@currency} по #{newest_rate.rate.to_f}. Профіт: #{planning_earnings * count} #{@currency}")
           if order['status'] && order['order_id']
+
             _amount = newest_rate.rate.to_f * count
             _operation_rate = ((planning_earnings * count)*0.1)/count + newest_rate.rate.to_f
+            _threshold = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
 
             Order.create(
               order_id: order['order_id'],
@@ -125,12 +149,15 @@ module Trading
               rate: newest_rate.rate.to_f
             )
             TradingState.where('name = ?', 'operation_rate').update_all(value: _operation_rate.to_f)
+            TradingState.where('name = ?', 'threshold').update_all(value: _threshold.to_f)
 ß
             say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції (-1%): #{_operation_rate}")
           else
             say_telegram("Не вдалось створити угоду: #{order}")
           end
         else
+          TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: _threshold_iteration_count.to_i += 1)
+
           _msg = []
           _msg << "валюта впала в ціні" if newest_rate.change_type == 'down'
           _msg << "курс не змінився" if newest_rate.change_type == 'none'
@@ -141,8 +168,12 @@ module Trading
         end
       else
         planning_earnings = trading_states['operation_rate'].to_f - newest_rate.rate.to_f
-        if newest_rate.change_type == 'down' && planning_earnings > avg_short_rate_diff
+        if (newest_rate.change_type == TRAND_BY_TRADING_TYPE[trading_type] && planning_earnings > avg_short_rate_diff) || _threshold_operation
           count = (@balance_pair[@base_currency].to_f * newest_rate.rate.to_f).to_i
+
+          if _threshold_operation
+            say_telegram("!!! Стоп-поріг: #{_threshold}, Курс: #{newest_rate.rate}. Втрати: -#{planning_earnings * count}")
+          end
 
           order = exchange_driver.buy(count, newest_rate.rate.to_f, @currency, @base_currency)
           say_telegram("#{order}")
@@ -152,7 +183,7 @@ module Trading
 
             _amount = newest_rate.rate.to_f * count
             _operation_rate = ((planning_earnings * count)*0.1)/count + newest_rate.rate.to_f
-
+            _threshold = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
 
             Order.create(
                 order_id: order['order_id'],
@@ -165,12 +196,15 @@ module Trading
                 rate: newest_rate.rate.to_f
             )
             TradingState.where('name = ?', 'operation_rate').update_all(value: _operation_rate.to_f)
+            TradingState.where('name = ?', 'threshold').update_all(value: _threshold.to_f)
 
             say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції (-1%): #{_operation_rate}")
           else
             say_telegram("Не вдалось створити угоду: #{order}")
           end
         else
+          TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: _threshold_iteration_count.to_i += 1)
+
           _msg = []
           _msg << "валюта виросла в ціні" if newest_rate.change_type == 'up'
           _msg << "курс не змінився" if newest_rate.change_type == 'none'
@@ -181,6 +215,11 @@ module Trading
         end
       end
 
+    end
+
+    #trand_stack = {"down"=>["down", "down", "down", "down", "down", "down"], "up"=>["up", "up", "up", "up", "up", "up", "up", "up", "up"]}
+    def check_trand(trading_type, trand_stack)
+      trand_stack[trading_type] < trand_stack[MAGIC[trading_type]]
     end
 
     private
