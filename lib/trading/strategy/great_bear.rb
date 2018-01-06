@@ -150,6 +150,7 @@ module Trading
             )
             TradingState.where('name = ?', 'operation_rate').update_all(value: _operation_rate.to_f)
             TradingState.where('name = ?', 'threshold').update_all(value: _threshold.to_f)
+            TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: 0)
 ß
             say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції (-1%): #{_operation_rate}")
           else
@@ -197,6 +198,7 @@ module Trading
             )
             TradingState.where('name = ?', 'operation_rate').update_all(value: _operation_rate.to_f)
             TradingState.where('name = ?', 'threshold').update_all(value: _threshold.to_f)
+            TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: 0)
 
             say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції (-1%): #{_operation_rate}")
           else
@@ -219,7 +221,8 @@ module Trading
 
     #trand_stack = {"down"=>["down", "down", "down", "down", "down", "down"], "up"=>["up", "up", "up", "up", "up", "up", "up", "up", "up"]}
     def check_trand(trading_type, trand_stack)
-      trand_stack[trading_type] < trand_stack[MAGIC[trading_type]]
+      say_telegram("#{trading_type}: #{trand_stack[trading_type].count} :: #{MAGIC[trading_type]}: #{trand_stack[MAGIC[trading_type]].count}")
+      trand_stack[trading_type].count < trand_stack[MAGIC[trading_type]].count
     end
 
     private
