@@ -13,7 +13,7 @@ module Trading
       'buy' => 'sell'
     }
 
-    MAX_THRESHOLD_COEF = 2
+    MAX_THRESHOLD_COEF = 3
 
     def initialize(currency_pair)
       @currency_pair = currency_pair.to_s
