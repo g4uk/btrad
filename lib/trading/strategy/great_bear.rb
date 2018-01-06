@@ -13,7 +13,7 @@ module Trading
       'buy' => 'sell'
     }
 
-    MAX_THRESHOLD_COEF = 3
+    MAX_THRESHOLD_COEF = 4
 
     def initialize(currency_pair)
       @currency_pair = currency_pair.to_s
@@ -149,7 +149,7 @@ module Trading
             TradingState.where('name = ?', 'operation_rate').update_all(value: _operation_rate.to_f)
             TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: 0)
 ß
-            say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції (-1%): #{_operation_rate}")
+            say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції: #{_operation_rate}")
           else
             say_telegram("Не вдалось створити угоду: #{order}")
           end
