@@ -103,7 +103,7 @@ module Trading
       newest_rate = short_stack.first.dup
 
       trand_stack = long_stack.select{|ls| ls.change_type != 'none' }.first(trading_states['max_analyze_iteration'].to_i * 2).map{|m| m.change_type}.group_by{|x| x}
-
+      say_telegram("#{trand_stack}")
       # >>>>>>>>>>>>>>>>>
 
       if trading_states['operation_rate'].to_f == 0.0
