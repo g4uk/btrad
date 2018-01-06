@@ -13,6 +13,8 @@ module Trading
       'buy' => 'sell'
     }
 
+    MAX_THRESHOLD_COEF = 30
+
     def initialize(currency_pair)
       @currency_pair = currency_pair.to_s
       @balance_pair = Hash[@currency_pair.split('_').map(&:upcase).zip [0, 0]]
@@ -102,7 +104,7 @@ module Trading
       short_stack = long_stack.first(trading_states['max_analyze_iteration'].to_i)
       newest_rate = short_stack.first.dup
 
-      trand_stack = long_stack.select{|ls| ls.change_type != 'none' }.first(trading_states['max_analyze_iteration'].to_i * 2).map{|m| m.change_type}.group_by{|x| x}
+      trand_stack = long_stack.select{|ls| ls.change_type != 'none' }.first(trading_states['max_analyze_iteration'].to_i * MAX_THRESHOLD_COEF).map{|m| m.change_type}.group_by{|x| x}
 
       # >>>>>>>>>>>>>>>>>
 
@@ -136,7 +138,7 @@ module Trading
           if order['status'] && order['order_id']
 
             _amount = newest_rate.rate.to_f * count
-            _operation_rate = planning_earnings*0.1 + newest_rate.rate.to_f
+            _operation_rate = planning_earnings*0.05 + newest_rate.rate.to_f
 
             _threshold_up = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
             _threshold_down = newest_rate.rate.to_f - planning_earnings*0.9 # стоп-поріг
@@ -187,7 +189,7 @@ module Trading
           if order['status'] && order['order_id']
 
             _amount = newest_rate.rate.to_f * count
-            _operation_rate = planning_earnings*0.1 + newest_rate.rate.to_f
+            _operation_rate = planning_earnings*0.05 + newest_rate.rate.to_f
 
             _threshold_up = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
             _threshold_down = newest_rate.rate.to_f - planning_earnings*0.9 # стоп-поріг
