@@ -103,7 +103,7 @@ module Trading
       newest_rate = short_stack.first.dup
 
       trand_stack = long_stack.select{|ls| ls.change_type != 'none' }.first(trading_states['max_analyze_iteration'].to_i * 2).map{|m| m.change_type}.group_by{|x| x}
-      say_telegram("#{trand_stack}")
+
       # >>>>>>>>>>>>>>>>>
 
       if trading_states['operation_rate'].to_f == 0.0
@@ -221,8 +221,8 @@ module Trading
 
     #trand_stack = {"down"=>["down", "down", "down", "down", "down", "down"], "up"=>["up", "up", "up", "up", "up", "up", "up", "up", "up"]}
     def check_trand(trading_type, trand_stack)
-      say_telegram("#{trading_type}: #{trand_stack[trading_type].to_a.count} :: #{MAGIC[trading_type]}: #{trand_stack[MAGIC[trading_type]].to_a.count}")
-      trand_stack[trading_type].to_a.count < trand_stack[MAGIC[trading_type]].to_a.count
+      say_telegram("#{trading_type}: #{trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count} :: #{TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]}: #{trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count}")
+      trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count < trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count
     end
 
     private
