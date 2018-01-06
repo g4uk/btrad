@@ -135,7 +135,7 @@ module Trading
           if order['status'] && order['order_id']
 
             _amount = newest_rate.rate.to_f * count
-            _operation_rate = ((planning_earnings * count)*0.1)/count + newest_rate.rate.to_f
+            _operation_rate = planning_earnings*0.1 + newest_rate.rate.to_f
             _threshold = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
 
             Order.create(
@@ -170,7 +170,7 @@ module Trading
       else
         planning_earnings = trading_states['operation_rate'].to_f - newest_rate.rate.to_f
         if (newest_rate.change_type == TRAND_BY_TRADING_TYPE[trading_type] && planning_earnings > avg_short_rate_diff) || _threshold_operation
-          count = (@balance_pair[@base_currency].to_f * newest_rate.rate.to_f).to_i
+          count = (@balance_pair[@base_currency].to_f / newest_rate.rate.to_f).to_i
 
           if _threshold_operation
             say_telegram("!!! Стоп-поріг: #{_threshold}, Курс: #{newest_rate.rate}. Втрати: -#{planning_earnings * count}")
@@ -183,7 +183,7 @@ module Trading
           if order['status'] && order['order_id']
 
             _amount = newest_rate.rate.to_f * count
-            _operation_rate = ((planning_earnings * count)*0.1)/count + newest_rate.rate.to_f
+            _operation_rate = planning_earnings*0.1 + newest_rate.rate.to_f
             _threshold = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
 
             Order.create(
