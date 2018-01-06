@@ -125,7 +125,7 @@ module Trading
       if trading_type == 'sell'
         planning_earnings = newest_rate_sell.rate.to_f - trading_states['operation_rate'].to_f
         if (newest_rate_sell.change_type == TRAND_BY_TRADING_TYPE[trading_type] && planning_earnings > avg_short_rate_diff) || _threshold_operation
-          count = @balance_pair[@currency].to_i
+          count = @balance_pair[@currency].round(4)
 
           order = exchange_driver.sell(count, newest_rate_sell.rate.to_f, @currency, @base_currency)
           say_telegram("#{order}")
@@ -167,7 +167,7 @@ module Trading
       else
         planning_earnings = trading_states['operation_rate'].to_f - newest_rate_buy.rate.to_f
         if (newest_rate_buy.change_type == TRAND_BY_TRADING_TYPE[trading_type] && planning_earnings > avg_short_rate_diff) || _threshold_operation
-          count = (@balance_pair[@base_currency].to_f / newest_rate_buy.rate.to_f).to_i
+          count = (@balance_pair[@base_currency].to_f / newest_rate_buy.rate.to_f).round(4)
 
           order = exchange_driver.buy(count, newest_rate_buy.rate.to_f, @currency, @base_currency)
           say_telegram("#{order}")
