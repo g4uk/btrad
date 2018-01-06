@@ -104,7 +104,7 @@ module Trading
       short_stack = long_stack.first(trading_states['max_analyze_iteration'].to_i)
       newest_rate = short_stack.first.dup
 
-      trand_stack = long_stack.select{|ls| ls.change_type != 'none' }.first(trading_states['max_analyze_iteration'].to_i * MAX_THRESHOLD_COEF).map{|m| m.change_type}.group_by{|x| x}
+      trand_stack = long_stack.select{|ls| ls.change_type != 'none' }.first(trading_states['max_analyze_iteration'].to_i * 2).map{|m| m.change_type}.group_by{|x| x}
 
       # >>>>>>>>>>>>>>>>>
 
@@ -120,7 +120,7 @@ module Trading
       _threshold_down = TradingState.where('name = ?', 'threshold_down').first.value.to_f
       _threshold_iteration_count = TradingState.where('name = ?', 'threshold_iteration_count').first.value.to_i
 
-      _threshold_operation = _threshold_iteration_count < trading_states['max_analyze_iteration'].to_i ? false : ((_threshold_up > 0 && _threshold_up <= newest_rate.rate.to_f && check_trand(trading_type, trand_stack, :up)) || (_threshold_down > newest_rate.rate.to_f && check_trand(trading_type, trand_stack, :down)))
+      _threshold_operation = _threshold_iteration_count < MAX_THRESHOLD_COEF ? false : ((_threshold_up > 0 && _threshold_up <= newest_rate.rate.to_f && check_trand(trading_type, trand_stack, :up)) || (_threshold_down > newest_rate.rate.to_f && check_trand(trading_type, trand_stack, :down)))
 
       if trading_type == 'sell'
         planning_earnings = newest_rate.rate.to_f - trading_states['operation_rate'].to_f
@@ -138,7 +138,7 @@ module Trading
           if order['status'] && order['order_id']
 
             _amount = newest_rate.rate.to_f * count
-            _operation_rate = planning_earnings*0.05 + newest_rate.rate.to_f
+            _operation_rate = newest_rate.rate.to_f
 
             _threshold_up = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
             _threshold_down = newest_rate.rate.to_f - planning_earnings*0.9 # стоп-поріг
@@ -189,7 +189,7 @@ module Trading
           if order['status'] && order['order_id']
 
             _amount = newest_rate.rate.to_f * count
-            _operation_rate = planning_earnings*0.05 + newest_rate.rate.to_f
+            _operation_rate = newest_rate.rate.to_f
 
             _threshold_up = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
             _threshold_down = newest_rate.rate.to_f - planning_earnings*0.9 # стоп-поріг
