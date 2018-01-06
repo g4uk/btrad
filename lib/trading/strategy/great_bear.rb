@@ -13,7 +13,7 @@ module Trading
       'buy' => 'sell'
     }
 
-    MAX_THRESHOLD_COEF = 100
+    MAX_THRESHOLD_COEF = 2
 
     def initialize(currency_pair)
       @currency_pair = currency_pair.to_s
@@ -231,11 +231,12 @@ module Trading
     #trand_stack = {"down"=>["down", "down", "down", "down", "down", "down"], "up"=>["up", "up", "up", "up", "up", "up", "up", "up", "up"]}
     def check_trand(trading_type, trand_stack, type)
       say_telegram("#{trading_type}: #{trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count} :: #{MAGIC[trading_type]}: #{trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count}")
-      if type == :up
-        trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count < trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count
-      else
-        trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count > trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count
-      end
+      # if type == :up
+      #   trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count < trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count
+      # else
+      #   trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count > trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count
+      # end
+      trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count == MAX_THRESHOLD_COEF
     end
 
     private
