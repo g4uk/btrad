@@ -140,8 +140,8 @@ module Trading
             _amount = newest_rate.rate.to_f * count
             _operation_rate = newest_rate.rate.to_f
 
-            _threshold_up = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
-            _threshold_down = newest_rate.rate.to_f - planning_earnings*0.9 # стоп-поріг
+            _threshold_down = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
+            _threshold_up = newest_rate.rate.to_f - planning_earnings*0.9 # стоп-поріг
 
             Order.create(
               order_id: order['order_id'],
