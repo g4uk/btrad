@@ -118,7 +118,7 @@ module Trading
       _threshold_down = TradingState.where('name = ?', 'threshold_down').first.value.to_f
       _threshold_iteration_count = TradingState.where('name = ?', 'threshold_iteration_count').first.value.to_i
 
-      _threshold_operation = _threshold_iteration_count < trading_states['max_analyze_iteration'].to_i ? false : check_trand(trading_type, trand_stack) && ((_threshold_up > 0 && _threshold_up <= newest_rate.rate.to_f) || _threshold_down > newest_rate.rate.to_f)
+      _threshold_operation = _threshold_iteration_count < trading_states['max_analyze_iteration'].to_i ? false : ((_threshold_up > 0 && _threshold_up <= newest_rate.rate.to_f && check_trand(trading_type, trand_stack, :up)) || (_threshold_down > newest_rate.rate.to_f && check_trand(trading_type, trand_stack, :down)))
 
       if trading_type == 'sell'
         planning_earnings = newest_rate.rate.to_f - trading_states['operation_rate'].to_f
@@ -227,9 +227,13 @@ module Trading
     end
 
     #trand_stack = {"down"=>["down", "down", "down", "down", "down", "down"], "up"=>["up", "up", "up", "up", "up", "up", "up", "up", "up"]}
-    def check_trand(trading_type, trand_stack)
+    def check_trand(trading_type, trand_stack, type)
       say_telegram("#{trading_type}: #{trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count} :: #{MAGIC[trading_type]}: #{trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count}")
-      trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count < trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count
+      if type == :up
+        trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count < trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count
+      else
+        trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count > trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count
+      end
     end
 
     private
