@@ -99,17 +99,20 @@ module Trading
       # >>>>>>>>>>>>>>>>>> побудова стеків
       #
       long_term_analyze_hours = Time.now - trading_states['long_term_analyze_hours'].to_i.hours
-      long_stack = RateStack.where('rate_type = ? AND created_at > ?', trading_type, long_term_analyze_hours).order('created_at DESC').all.to_a
+      long_stack = RateStack.where('created_at > ?', long_term_analyze_hours).order('created_at DESC').all.to_a
 
-      short_stack = long_stack.first(trading_states['max_analyze_iteration'].to_i)
-      newest_rate = short_stack.first.dup
+      short_stack_sell = long_stack.select{|sss| sss.rate_type == 'sell' }.first(trading_states['max_analyze_iteration'].to_i)
+      short_stack_buy = long_stack.select{|ssb| ssb.rate_type == 'buy' }.first(trading_states['max_analyze_iteration'].to_i)
+
+      newest_rate_sell = short_stack_sell.first.dup
+      newest_rate_buy = short_stack_buy.first.dup
 
       trand_stack = long_stack.select{|ls| ls.change_type != 'none' }.first(MAX_THRESHOLD_COEF).map{|m| m.change_type}.group_by{|x| x}
 
       # >>>>>>>>>>>>>>>>>
 
       if trading_states['operation_rate'].to_f == 0.0
-        TradingState.where('name = ?', 'operation_rate').update_all(value: newest_rate.rate.to_f)
+        TradingState.where('name = ?', 'operation_rate').update_all(value: trading_type == 'sell' ? newest_rate_sell.rate.to_f : newest_rate_buy.rate.to_f)
       end
 
       #cons = short_stack.map{|s| s.rate }.each_cons(2).collect { |a, b| b - a }
@@ -120,22 +123,18 @@ module Trading
       _threshold_operation = _threshold_iteration_count < MAX_THRESHOLD_COEF ? false : check_trand(trading_type, trand_stack)
 
       if trading_type == 'sell'
-        planning_earnings = newest_rate.rate.to_f - trading_states['operation_rate'].to_f
-        if (newest_rate.change_type == TRAND_BY_TRADING_TYPE[trading_type] && planning_earnings > avg_short_rate_diff) || _threshold_operation
+        planning_earnings = newest_rate_sell.rate.to_f - trading_states['operation_rate'].to_f
+        if (newest_rate_sell.change_type == TRAND_BY_TRADING_TYPE[trading_type] && planning_earnings > avg_short_rate_diff) || _threshold_operation
           count = @balance_pair[@currency].to_i
 
-          if _threshold_operation
-            say_telegram("!!! Стоп-поріг up: #{_threshold_up} <-> down: #{_threshold_down}, Курс: #{newest_rate.rate}. Втрати: -#{planning_earnings * count}")
-          end
-
-          order = exchange_driver.sell(count, newest_rate.rate.to_f, @currency, @base_currency)
+          order = exchange_driver.sell(count, newest_rate_sell.rate.to_f, @currency, @base_currency)
           say_telegram("#{order}")
 
-          say_telegram("Продаж #{@balance_pair[@currency]} #{@currency} по #{newest_rate.rate.to_f}. Профіт: #{planning_earnings * count} #{@currency}")
+          say_telegram("Продаж #{@balance_pair[@currency]} #{@currency} по #{newest_rate_sell.rate.to_f}. Профіт: #{planning_earnings * count} #{@currency}")
           if order['status'] && order['order_id']
 
-            _amount = newest_rate.rate.to_f * count
-            _operation_rate = newest_rate.rate.to_f
+            _amount = newest_rate_sell.rate.to_f * count
+            _operation_rate = newest_rate_buy.rate.to_f
 
             Order.create(
               order_id: order['order_id'],
@@ -145,11 +144,9 @@ module Trading
               base_currency: @base_currency,
               currency: @currency,
               amount: _amount,
-              rate: newest_rate.rate.to_f
+              rate: newest_rate_sell.rate.to_f
             )
             TradingState.where('name = ?', 'operation_rate').update_all(value: _operation_rate.to_f)
-            TradingState.where('name = ?', 'threshold_up').update_all(value: _threshold_up.to_f)
-            TradingState.where('name = ?', 'threshold_down').update_all(value: _threshold_down.to_f)
             TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: 0)
 ß
             say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції (-1%): #{_operation_rate}")
@@ -160,30 +157,26 @@ module Trading
           TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: _threshold_iteration_count += 1)
 
           _msg = []
-          _msg << "валюта впала в ціні" if newest_rate.change_type == 'down'
-          _msg << "курс не змінився" if newest_rate.change_type == 'none'
+          _msg << "валюта впала в ціні" if newest_rate_sell.change_type == 'down'
+          _msg << "курс не змінився" if newest_rate_sell.change_type == 'none'
           _msg << "не вигідно продавати" if planning_earnings <= avg_short_rate_diff
 
-          say_telegram("#{{planning_earnings: planning_earnings, avg_short_rate_diff: avg_short_rate_diff, change_type: newest_rate.change_type, rate: newest_rate.rate}}")
+          say_telegram("#{{planning_earnings: planning_earnings, avg_short_rate_diff: avg_short_rate_diff, change_type: newest_rate_sell.change_type, rate: newest_rate_sell.rate}}")
           say_telegram("#{_msg.join(' і ')}, чекаємо...")
         end
       else
-        planning_earnings = trading_states['operation_rate'].to_f - newest_rate.rate.to_f
-        if (newest_rate.change_type == TRAND_BY_TRADING_TYPE[trading_type] && planning_earnings > avg_short_rate_diff) || _threshold_operation
+        planning_earnings = trading_states['operation_rate'].to_f - newest_rate_buy.rate.to_f
+        if (newest_rate_buy.change_type == TRAND_BY_TRADING_TYPE[trading_type] && planning_earnings > avg_short_rate_diff) || _threshold_operation
           count = (@balance_pair[@base_currency].to_f / newest_rate.rate.to_f).to_i
 
-          if _threshold_operation
-            say_telegram("!!! Стоп-поріг: #{_threshold_up} <-> down: #{_threshold_down}, Курс: #{newest_rate.rate}. Втрати: -#{planning_earnings * count}")
-          end
-
-          order = exchange_driver.buy(count, newest_rate.rate.to_f, @currency, @base_currency)
+          order = exchange_driver.buy(count, newest_rate_buy.rate.to_f, @currency, @base_currency)
           say_telegram("#{order}")
 
-          say_telegram("Покупка #{@balance_pair[@currency]} #{@currency} по #{newest_rate.rate.to_f}. Профіт: #{planning_earnings * count} #{@base_currency}")
+          say_telegram("Покупка #{@balance_pair[@currency]} #{@currency} по #{newest_rate_buy.rate.to_f}. Профіт: #{planning_earnings * count} #{@base_currency}")
           if order['status'] && order['order_id']
 
-            _amount = newest_rate.rate.to_f * count
-            _operation_rate = newest_rate.rate.to_f
+            _amount = newest_rate_buy.rate.to_f * count
+            _operation_rate = newest_rate_sell.rate.to_f
 
             Order.create(
                 order_id: order['order_id'],
@@ -193,7 +186,7 @@ module Trading
                 base_currency: @base_currency,
                 currency: @currency,
                 amount: _amount,
-                rate: newest_rate.rate.to_f
+                rate: newest_rate_buy.rate.to_f
             )
             TradingState.where('name = ?', 'operation_rate').update_all(value: _operation_rate.to_f)
             TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: 0)
@@ -206,11 +199,11 @@ module Trading
           TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: _threshold_iteration_count += 1)
 
           _msg = []
-          _msg << "валюта виросла в ціні" if newest_rate.change_type == 'up'
-          _msg << "курс не змінився" if newest_rate.change_type == 'none'
+          _msg << "валюта виросла в ціні" if newest_rate_buy.change_type == 'up'
+          _msg << "курс не змінився" if newest_rate_buy.change_type == 'none'
           _msg << "не вигідно купувати" if planning_earnings <= avg_short_rate_diff
 
-          say_telegram("#{{planning_earnings: planning_earnings, avg_short_rate_diff: avg_short_rate_diff, change_type: newest_rate.change_type, rate: newest_rate.rate}}")
+          say_telegram("#{{planning_earnings: planning_earnings, avg_short_rate_diff: avg_short_rate_diff, change_type: newest_rate_buy.change_type, rate: newest_rate_buy.rate}}")
           say_telegram("#{_msg.join(' і ')}, чекаємо...")
         end
       end
