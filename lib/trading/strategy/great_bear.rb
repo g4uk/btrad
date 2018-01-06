@@ -114,10 +114,11 @@ module Trading
       #avg_short_rate_diff = cons.reduce(:+).to_f / cons.size
       avg_short_rate_diff = 0
 
-      _threshold = TradingState.where('name = ?', 'threshold').first.value.to_f
+      _threshold_up = TradingState.where('name = ?', 'threshold_up').first.value.to_f
+      _threshold_down = TradingState.where('name = ?', 'threshold_down').first.value.to_f
       _threshold_iteration_count = TradingState.where('name = ?', 'threshold_iteration_count').first.value.to_i
 
-      _threshold_operation = _threshold <= 0.0 || _threshold_iteration_count < trading_states['max_analyze_iteration'].to_i ? false : check_trand(trading_type, trand_stack) && _threshold <= newest_rate.rate.to_f
+      _threshold_operation = _threshold_iteration_count < trading_states['max_analyze_iteration'].to_i ? false : check_trand(trading_type, trand_stack) && ((_threshold_up > 0 && _threshold_up <= newest_rate.rate.to_f) || _threshold_down > newest_rate.rate.to_f)
 
       if trading_type == 'sell'
         planning_earnings = newest_rate.rate.to_f - trading_states['operation_rate'].to_f
@@ -125,7 +126,7 @@ module Trading
           count = @balance_pair[@currency].to_i
 
           if _threshold_operation
-            say_telegram("!!! Стоп-поріг: #{_threshold}, Курс: #{newest_rate.rate}. Втрати: -#{planning_earnings * count}")
+            say_telegram("!!! Стоп-поріг up: #{_threshold_up} <-> down: #{_threshold_down}, Курс: #{newest_rate.rate}. Втрати: -#{planning_earnings * count}")
           end
 
           order = exchange_driver.sell(count, newest_rate.rate.to_f, @currency, @base_currency)
@@ -136,7 +137,9 @@ module Trading
 
             _amount = newest_rate.rate.to_f * count
             _operation_rate = planning_earnings*0.1 + newest_rate.rate.to_f
-            _threshold = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
+
+            _threshold_up = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
+            _threshold_down = newest_rate.rate.to_f - planning_earnings*0.9 # стоп-поріг
 
             Order.create(
               order_id: order['order_id'],
@@ -149,7 +152,8 @@ module Trading
               rate: newest_rate.rate.to_f
             )
             TradingState.where('name = ?', 'operation_rate').update_all(value: _operation_rate.to_f)
-            TradingState.where('name = ?', 'threshold').update_all(value: _threshold.to_f)
+            TradingState.where('name = ?', 'threshold_up').update_all(value: _threshold_up.to_f)
+            TradingState.where('name = ?', 'threshold_down').update_all(value: _threshold_down.to_f)
             TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: 0)
 ß
             say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції (-1%): #{_operation_rate}")
@@ -173,7 +177,7 @@ module Trading
           count = (@balance_pair[@base_currency].to_f / newest_rate.rate.to_f).to_i
 
           if _threshold_operation
-            say_telegram("!!! Стоп-поріг: #{_threshold}, Курс: #{newest_rate.rate}. Втрати: -#{planning_earnings * count}")
+            say_telegram("!!! Стоп-поріг: #{_threshold_up} <-> down: #{_threshold_down}, Курс: #{newest_rate.rate}. Втрати: -#{planning_earnings * count}")
           end
 
           order = exchange_driver.buy(count, newest_rate.rate.to_f, @currency, @base_currency)
@@ -184,7 +188,9 @@ module Trading
 
             _amount = newest_rate.rate.to_f * count
             _operation_rate = planning_earnings*0.1 + newest_rate.rate.to_f
-            _threshold = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
+
+            _threshold_up = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
+            _threshold_down = newest_rate.rate.to_f - planning_earnings*0.9 # стоп-поріг
 
             Order.create(
                 order_id: order['order_id'],
@@ -197,7 +203,8 @@ module Trading
                 rate: newest_rate.rate.to_f
             )
             TradingState.where('name = ?', 'operation_rate').update_all(value: _operation_rate.to_f)
-            TradingState.where('name = ?', 'threshold').update_all(value: _threshold.to_f)
+            TradingState.where('name = ?', 'threshold_up').update_all(value: _threshold_up.to_f)
+            TradingState.where('name = ?', 'threshold_down').update_all(value: _threshold_down.to_f)
             TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: 0)
 
             say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції (-1%): #{_operation_rate}")
