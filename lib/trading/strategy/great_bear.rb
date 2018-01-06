@@ -221,7 +221,7 @@ module Trading
 
     #trand_stack = {"down"=>["down", "down", "down", "down", "down", "down"], "up"=>["up", "up", "up", "up", "up", "up", "up", "up", "up"]}
     def check_trand(trading_type, trand_stack)
-      say_telegram("#{trading_type}: #{trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count} :: #{TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]}: #{trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count}")
+      say_telegram("#{trading_type}: #{trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count} :: #{MAGIC[trading_type]}: #{trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count}")
       trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count < trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count
     end
 
