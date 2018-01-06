@@ -134,7 +134,7 @@ module Trading
           if order['status'] && order['order_id']
 
             _amount = newest_rate_sell.rate.to_f * count
-            _operation_rate = newest_rate_buy.rate.to_f
+            _operation_rate = newest_rate_sell.rate.to_f
 
             Order.create(
               order_id: order['order_id'],
@@ -176,7 +176,7 @@ module Trading
           if order['status'] && order['order_id']
 
             _amount = newest_rate_buy.rate.to_f * count
-            _operation_rate = newest_rate_sell.rate.to_f
+            _operation_rate = newest_rate_buy.rate.to_f
 
             Order.create(
                 order_id: order['order_id'],
