@@ -104,7 +104,7 @@ module Trading
       short_stack = long_stack.first(trading_states['max_analyze_iteration'].to_i)
       newest_rate = short_stack.first.dup
 
-      trand_stack = long_stack.select{|ls| ls.change_type != 'none' }.first(trading_states['max_analyze_iteration'].to_i * 2).map{|m| m.change_type}.group_by{|x| x}
+      trand_stack = long_stack.select{|ls| ls.change_type != 'none' }.first(MAX_THRESHOLD_COEF).map{|m| m.change_type}.group_by{|x| x}
 
       # >>>>>>>>>>>>>>>>>
 
@@ -116,11 +116,8 @@ module Trading
       #avg_short_rate_diff = cons.reduce(:+).to_f / cons.size
       avg_short_rate_diff = 0
 
-      _threshold_up = TradingState.where('name = ?', 'threshold_up').first.value.to_f
-      _threshold_down = TradingState.where('name = ?', 'threshold_down').first.value.to_f
       _threshold_iteration_count = TradingState.where('name = ?', 'threshold_iteration_count').first.value.to_i
-
-      _threshold_operation = _threshold_iteration_count < MAX_THRESHOLD_COEF ? false : ((_threshold_up > 0 && _threshold_up <= newest_rate.rate.to_f && check_trand(trading_type, trand_stack, :up)) || (_threshold_down > newest_rate.rate.to_f && check_trand(trading_type, trand_stack, :down)))
+      _threshold_operation = _threshold_iteration_count < MAX_THRESHOLD_COEF ? false : check_trand(trading_type, trand_stack)
 
       if trading_type == 'sell'
         planning_earnings = newest_rate.rate.to_f - trading_states['operation_rate'].to_f
@@ -139,9 +136,6 @@ module Trading
 
             _amount = newest_rate.rate.to_f * count
             _operation_rate = newest_rate.rate.to_f
-
-            _threshold_down = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
-            _threshold_up = newest_rate.rate.to_f - planning_earnings*0.9 # стоп-поріг
 
             Order.create(
               order_id: order['order_id'],
@@ -191,9 +185,6 @@ module Trading
             _amount = newest_rate.rate.to_f * count
             _operation_rate = newest_rate.rate.to_f
 
-            _threshold_down = planning_earnings*0.9 + newest_rate.rate.to_f # стоп-поріг
-            _threshold_up = newest_rate.rate.to_f - planning_earnings*0.9 # стоп-поріг
-
             Order.create(
                 order_id: order['order_id'],
                 order_type: trading_type,
@@ -205,8 +196,6 @@ module Trading
                 rate: newest_rate.rate.to_f
             )
             TradingState.where('name = ?', 'operation_rate').update_all(value: _operation_rate.to_f)
-            TradingState.where('name = ?', 'threshold_up').update_all(value: _threshold_up.to_f)
-            TradingState.where('name = ?', 'threshold_down').update_all(value: _threshold_down.to_f)
             TradingState.where('name = ?', 'threshold_iteration_count').update_all(value: 0)
 
             say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції (-1%): #{_operation_rate}")
@@ -229,13 +218,8 @@ module Trading
     end
 
     #trand_stack = {"down"=>["down", "down", "down", "down", "down", "down"], "up"=>["up", "up", "up", "up", "up", "up", "up", "up", "up"]}
-    def check_trand(trading_type, trand_stack, type)
-      say_telegram("#{trading_type}: #{trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count} :: #{MAGIC[trading_type]}: #{trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count}")
-      # if type == :up
-      #   trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count < trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count
-      # else
-      #   trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count > trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count
-      # end
+    def check_trand(trading_type, trand_stack)
+      say_telegram("#{trading_type}: #{trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count}")
       trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count == MAX_THRESHOLD_COEF
     end
 
