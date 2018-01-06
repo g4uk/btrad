@@ -236,7 +236,7 @@ module Trading
       # else
       #   trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count > trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count
       # end
-      trand_stack[TRAND_BY_TRADING_TYPE[trading_type]].to_a.count == MAX_THRESHOLD_COEF
+      trand_stack[TRAND_BY_TRADING_TYPE[MAGIC[trading_type]]].to_a.count == MAX_THRESHOLD_COEF
     end
 
     private
