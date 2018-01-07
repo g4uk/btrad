@@ -16,7 +16,7 @@ module Trading
         @short_stack = long_stack.select{|sss| sss.rate_type == trading_type }.first(trading_states['max_analyze_iteration'].to_i)
         @newest_rate = @short_stack.first.dup
 
-        @ignore_amount_profit = TradingState.where('name = ?', 'ignore_amount_trigger').first.value.to_i == 1
+        @ignore_amount_profit = TradingState.where('name = ?', 'ignore_amount_trigger').first.value.to_i == 't'
       end
 
       def do

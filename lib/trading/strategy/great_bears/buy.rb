@@ -20,7 +20,7 @@ module Trading
         end
 
         order_in_profit = (count > @latest_order.count * 1.01 && @latest_order.amount > amount) || @ignore_amount_profit
-        threshold_operation = @threshold_up > 0 && @threshold_up <= @newest_rate.rate.to_f && @newest_rate.change_type == 'up'
+        threshold_operation = @threshold_up.to_f > 0 && @threshold_up <= @newest_rate.rate.to_f && @newest_rate.change_type == 'up'
 
         if threshold_operation
           say_telegram("!!! Стоп-поріг ВЕРХ: #{@threshold_up}, Курс: #{@newest_rate.rate}. Втрати: #{planning_rate_profit * count}")
@@ -40,7 +40,7 @@ module Trading
               @threshold_down = planning_rate_profit*0.9 + @newest_rate.rate.to_f # стоп-поріг 90% від попереднього доходу для наступної операції
               TradingState.where('name = ?', 'threshold_down').update_all(value: @threshold_down.to_f)
             else
-              TradingState.where('name = ?', 'threshold_down').update_all(value: 0)
+              TradingState.where('name = ?', 'threshold_down').update_all(value: false)
             end
 
             Order.create(
@@ -59,7 +59,7 @@ module Trading
             TradingState.where('name = ?', 'base_currency_trade_limit').update_all(value: amount)
 
             if @ignore_amount_profit
-              TradingState.where('name = ?', 'ignore_amount_trigger').update_all(value: 0)
+              TradingState.where('name = ?', 'ignore_amount_trigger').update_all(value: false)
             end
 
             say_telegram("Створено угоду №#{order['order_id']}. Межа наступної операції: #{operation_rate}. Новий ліміт на торгівлю: #{amount}")
