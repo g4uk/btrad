@@ -110,6 +110,7 @@ module Trading
       strategy_action.base_currency = @base_currency
       strategy_action.trading_states = trading_states
       strategy_action.long_stack = long_stack
+      strategy_action.balance_pair = @balance_pair
       strategy_action.do
     end
 

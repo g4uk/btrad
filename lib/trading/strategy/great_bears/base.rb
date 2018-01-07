@@ -5,7 +5,7 @@ module Trading
     class Base
       include Trading::TelegramMixin
 
-      attr_accessor :long_stack, :trading_states, :exchange_driver, :currency, :base_currency
+      attr_accessor :long_stack, :trading_states, :exchange_driver, :currency, :base_currency, :balance_pair
 
       def initialize
         @latest_order = Order.order('id DESC').first

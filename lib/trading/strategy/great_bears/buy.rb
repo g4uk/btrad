@@ -13,7 +13,9 @@ module Trading
         super
 
         planning_rate_profit = trading_states['operation_rate'].to_f - @newest_rate.rate.to_f
-        count = (trading_states['base_currency_trade_limit'].to_f / @newest_rate.rate.to_f).to_i
+        #count = (trading_states['base_currency_trade_limit'].to_f / @newest_rate.rate.to_f).to_i
+        count = (balance_pair[base_currency].to_f / @newest_rate.rate.to_f).to_i
+
         amount = @newest_rate.rate.to_f * count
 
         if amount <= 0
@@ -58,7 +60,7 @@ module Trading
             )
 
             TradingState.where('name = ?', 'operation_rate').update_all(value: operation_rate.to_f)
-            TradingState.where('name = ?', 'base_currency_trade_limit').update_all(value: amount)
+            #TradingState.where('name = ?', 'base_currency_trade_limit').update_all(value: amount)
             TradingState.where('name = ?', "btc_ua_#{@currency_pair}_trading_type").update_all(value: 'sell')
 
             if @ignore_amount_profit
