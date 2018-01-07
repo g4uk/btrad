@@ -22,8 +22,8 @@ module Trading
           return nil
         end
 
-        order_in_profit = (count > @latest_order.count * 1.01 && @latest_order.amount < amount) || @ignore_amount_profit
-        threshold_operation = @threshold_down.to_f > 0 && @threshold_down >= @newest_rate.rate.to_f && @newest_rate.change_type == 'down'
+        order_in_profit = (count > @latest_order.count * 1.01 && amount > @latest_order.amount) || @ignore_amount_profit
+        threshold_operation = false #@threshold_down.to_f > 0 && @threshold_down >= @newest_rate.rate.to_f && @newest_rate.change_type == 'down'
 
         if threshold_operation
           say_telegram("!!! Стоп-поріг НИЗ: #{@threshold_down}, Курс: #{@newest_rate.rate}. Втрати: #{planning_rate_profit * count}")
