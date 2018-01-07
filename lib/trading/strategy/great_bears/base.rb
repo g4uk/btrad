@@ -8,7 +8,7 @@ module Trading
       attr_accessor :long_stack, :trading_states, :exchange_driver, :currency, :base_currency, :balance_pair
 
       def initialize
-        @latest_order = Order.order('id DESC').first
+        @latest_order = Order.where('status = ?', 'processed').order('id DESC').first
 
         @threshold_up = TradingState.where('name = ?', 'threshold_up').first.value.to_f
         @threshold_down = TradingState.where('name = ?', 'threshold_down').first.value.to_f
