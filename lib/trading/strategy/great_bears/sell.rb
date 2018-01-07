@@ -14,7 +14,7 @@ module Trading
 
         planning_rate_profit = @newest_rate.rate.to_f - trading_states['operation_rate'].to_f
         #count = (trading_states['base_currency_trade_limit'].to_f / @newest_rate.rate.to_f).to_i
-        count = balance_pair[currency]
+        count = balance_pair[currency].to_i
         amount = @newest_rate.rate.to_f * count
 
         if amount <= 0
