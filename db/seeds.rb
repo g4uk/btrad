@@ -42,7 +42,6 @@ unless TradingState.where('name = ?', 'threshold_down').exists?
   TradingState.create(name: 'threshold_down', value: 0)
 end
 
-unless TradingState.where('name = ?', 'threshold_iteration_count').exists?
-  TradingState.create(name: 'threshold_iteration_count', value: 0)
+unless TradingState.where('name = ?', 'ignore_amount_trigger').exists?
+  TradingState.create(name: 'ignore_amount_trigger', value: 1)
 end
-
