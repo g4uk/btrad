@@ -13,7 +13,7 @@ module Trading
         @threshold_up = TradingState.where('name = ?', 'threshold_up').first.value.to_f
         @threshold_down = TradingState.where('name = ?', 'threshold_down').first.value.to_f
 
-        @ignore_amount_profit = TradingState.where('name = ?', 'ignore_amount_trigger').first.value.to_i == 't'
+        @ignore_amount_profit = TradingState.where('name = ?', 'ignore_amount_trigger').first.value == 't'
       end
 
       def do
