@@ -77,7 +77,7 @@ module Trading
           _msg << "не вигідно продавати" if planning_rate_profit <= 0
           _msg << "підрахунки не відповідають очікуванням. count: #{count > @latest_order.count * 1.01}; amount: #{@latest_order.amount > amount}" unless order_in_profit
 
-          say_telegram("#{{planning_rate_profit: planning_rate_profit, change_type: trading_type_for_profit, rate: @newest_rate.rate}}")
+          say_telegram("#{{planning_rate_profit: planning_rate_profit, change_type: @newest_rate.change_type, rate: @newest_rate.rate}}")
           say_telegram("#{_msg.join(' і ')}, чекаємо...")
         end
       end
