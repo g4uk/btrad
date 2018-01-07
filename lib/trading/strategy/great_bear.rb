@@ -14,9 +14,13 @@ module Trading
 
       # >>>>>>>>>>>>>> перевірка відкритих заявок
 
-      unless exchange_driver.my_orders['your_open_orders'].empty?
-        say_telegram('Є відкриті угоди. чекаємо...')
-        return nil
+      unless (open_orders = exchange_driver.my_orders['your_open_orders']).empty?
+        open_orders.each do |oo|
+          if Order.where('order_id = ?', oo['id'].to_i).first
+            say_telegram('Є відкриті угоди. чекаємо...')
+            return nil
+          end
+        end
       end
 
       say_telegram('Перевірка статусів ордерів...')
