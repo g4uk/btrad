@@ -93,7 +93,10 @@ module Trading
       if trading_states['operation_rate'].to_f == 0.0
         TradingState.where('name = ?', 'operation_rate').update_all(value: trading_type == 'sell' ? newest_rate_sell.rate.to_f : newest_rate_buy.rate.to_f)
       end
-
+p '@'*100
+p long_stack
+      p trading_states
+      p '@'*100
       strategy_action = "Trading::Strategy::GreatBears::#{trading_type.capitalize}".constantize.new
       strategy_action.exchange_driver = exchange_driver
       strategy_action.currency = @currency
