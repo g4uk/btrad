@@ -35,13 +35,13 @@ unless TradingState.where('name = ?', 'base_currency_trade_limit').exists?
 end
 
 unless TradingState.where('name = ?', 'threshold_up').exists?
-  TradingState.create(name: 'threshold_up', value: 0)
+  TradingState.create(name: 'threshold_up', value: false)
 end
 
 unless TradingState.where('name = ?', 'threshold_down').exists?
-  TradingState.create(name: 'threshold_down', value: 0)
+  TradingState.create(name: 'threshold_down', value: false)
 end
 
 unless TradingState.where('name = ?', 'ignore_amount_trigger').exists?
-  TradingState.create(name: 'ignore_amount_trigger', value: 1)
+  TradingState.create(name: 'ignore_amount_trigger', value: true)
 end
