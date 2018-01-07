@@ -45,3 +45,7 @@ end
 unless TradingState.where('name = ?', 'ignore_amount_trigger').exists?
   TradingState.create(name: 'ignore_amount_trigger', value: true)
 end
+
+unless TradingState.where('name = ?', 'btc_ua_doge_uah_trading_type').exists?
+  TradingState.create(name: 'doge_uah_trading_type', value: false)
+end
