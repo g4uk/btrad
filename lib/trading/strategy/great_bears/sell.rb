@@ -22,7 +22,7 @@ module Trading
           return nil
         end
 
-        order_in_profit = (count > @latest_order.count * 1.01 && amount > @latest_order.amount) || @ignore_amount_profit
+        order_in_profit = (amount > @latest_order.amount * 1.01) || @ignore_amount_profit
         threshold_operation = false #@threshold_down.to_f > 0 && @threshold_down >= @newest_rate.rate.to_f && @newest_rate.change_type == 'down'
 
         if threshold_operation
