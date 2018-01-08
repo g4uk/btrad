@@ -75,7 +75,7 @@ module Trading
           _msg << "валюта впала в ціні" if @newest_rate.change_type == 'down'
           _msg << "курс не змінився" if @newest_rate.change_type == 'none'
           _msg << "не вигідно продавати" if planning_rate_profit <= 0
-          _msg << "підрахунки не відповідають очікуванням. amount: #{@latest_order.amount > amount}" unless order_in_profit
+          _msg << "підрахунки не відповідають очікуванням. amount: #{amount > @latest_order.amount * 1.01}" unless order_in_profit
 
           say_telegram("#{{planning_rate_profit: planning_rate_profit, change_type: @newest_rate.change_type, rate: @newest_rate.rate}}")
           say_telegram("#{_msg.join(' і ')}, чекаємо...")
