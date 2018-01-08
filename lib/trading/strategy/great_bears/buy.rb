@@ -56,7 +56,7 @@ module Trading
               currency: currency,
               amount: amount,
               rate: @newest_rate.rate.to_f,
-              profit: amount.to_f - @latest_order.amount.to_f
+              profit: (count.to_i - @latest_order.count.to_i) * @newest_rate.rate.to_f
             )
 
             TradingState.where('name = ?', 'operation_rate').update_all(value: operation_rate.to_f)
