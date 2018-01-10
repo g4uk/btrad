@@ -60,7 +60,7 @@ module Trading
 
             TradingState.where('name = ?', 'operation_rate').update_all(value: operation_rate.to_f)
             #TradingState.where('name = ?', 'base_currency_trade_limit').update_all(value: amount)
-            #TradingState.where('name = ?', "btc_ua_#{@currency_pair}_trading_type").update_all(value: 'buy')
+            TradingState.where('name = ?', "btc_ua_#{@currency_pair}_trading_type").update_all(value: 'buy')
 
             if @ignore_amount_profit
               TradingState.where('name = ?', 'ignore_amount_trigger').update_all(value: false)
