@@ -96,7 +96,7 @@ module Trading
       # >>>>>>>>>>>>>>>>>> побудова стеків
       #
       long_term_analyze_hours = Time.now - trading_states['long_term_analyze_hours'].to_i.hours
-      long_stack = RateStack.where('created_at > ?', long_term_analyze_hours).order('created_at DESC').all.to_a
+      long_stack = RateStack.where('created_at > ? AND currency = ? AND base_currency = ?', long_term_analyze_hours, @currency, @base_currency).order('created_at DESC').all.to_a
 
       # >>>>>>>>>>>>>>>>>
 
