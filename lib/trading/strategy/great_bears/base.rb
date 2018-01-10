@@ -19,6 +19,10 @@ module Trading
       def do
         @short_stack = long_stack.to_a.select{|sss| sss.rate_type == trading_type }.first(trading_states['max_analyze_iteration'].to_i)
         @newest_rate = @short_stack.first.dup
+
+        if trading_states['operation_rate'].to_f == 0.0
+          TradingState.where('name = ?', 'operation_rate').update_all(value: trading_type == 'sell' ? @newest_rate.rate.to_f : @newest_rate.rate.to_f)
+        end
       end
     end
   end
