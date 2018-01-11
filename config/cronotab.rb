@@ -14,4 +14,4 @@
 # Crono.perform(TestJob).every 2.days, at: '15:30'
 #
 
-Crono.perform( TradingJob ).with_options(truncate_log: 1000).every 20.seconds
+Crono.perform( TradingJob ).with_options(truncate_log: 1000).every 30.seconds
