@@ -22,7 +22,7 @@ module Trading
           return nil
         end
 
-        order_in_profit = (amount > @latest_order.amount * 1.01) || @ignore_amount_profit
+        order_in_profit = (amount > @latest_order.amount * 1.02) || @ignore_amount_profit
         threshold_operation = false #@threshold_down.to_f > 0 && @threshold_down >= @newest_rate.rate.to_f && @newest_rate.change_type == 'down'
 
         if threshold_operation
@@ -60,7 +60,7 @@ module Trading
 
             TradingState.where('name = ?', 'operation_rate').update_all(value: operation_rate.to_f)
             #TradingState.where('name = ?', 'base_currency_trade_limit').update_all(value: amount)
-            TradingState.where('name = ?', "btc_ua_#{@currency_pair}_trading_type").update_all(value: 'buy')
+            #TradingState.where('name = ?', "btc_ua_#{@currency_pair}_trading_type").update_all(value: 'buy')
 
             if @ignore_amount_profit
               TradingState.where('name = ?', 'ignore_amount_trigger').update_all(value: false)

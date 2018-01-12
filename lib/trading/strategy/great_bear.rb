@@ -55,14 +55,14 @@ module Trading
 
 
       #if TradingState.where('name = ?', "btc_ua_#{@currency_pair}_trading_type").first.value == 'f'
-        # if @balance_pair[@base_currency].to_f < trading_states['balance_minimum_for_trading'].to_f
-        #   trading_type = 'sell'
-        # else
-        #   trading_type = 'buy'
-        # end
+        if @balance_pair[@base_currency].to_f < trading_states['balance_minimum_for_trading'].to_f
+          trading_type = 'sell'
+        else
+          trading_type = 'buy'
+        end
        # TradingState.where('name = ?', "btc_ua_#{@currency_pair}_trading_type").update_all(value: trading_type)
       #else
-        trading_type = TradingState.where('name = ?', "btc_ua_#{@currency_pair}_trading_type").first.value
+        #trading_type = TradingState.where('name = ?', "btc_ua_#{@currency_pair}_trading_type").first.value
       #end
 
       say_telegram("Тип операції: #{trading_type}")
